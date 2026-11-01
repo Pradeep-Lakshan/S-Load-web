@@ -1,4 +1,5 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { createServer as createViteServer } from 'vite';
 import { spawn, execFile } from 'child_process';
 import path from 'path';
@@ -719,18 +720,26 @@ app.post('/api/turnstile/verify', (req, res) => {
 
 async function startServer() {
   const isProd = process.env.NODE_ENV === 'production';
+  const distPath = path.join(__dirname, 'dist');
+  const publicPath = path.join(__dirname, 'public');
 
-  if (!isProd) {
+  // Always serve public assets (samples, icons)
+  if (fs.existsSync(publicPath)) {
+    app.use(express.static(publicPath));
+  }
+
+  if (isProd && fs.existsSync(distPath)) {
+    app.use(express.static(distPath));
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(distPath, 'index.html'));
+    });
+  } else {
+    // If not production or if dist has not been built yet, mount Vite middleware
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
     });
     app.use(vite.middlewares);
-  } else {
-    app.use(express.static(path.join(__dirname, 'dist')));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-    });
   }
 
   app.listen(PORT, '0.0.0.0', () => {

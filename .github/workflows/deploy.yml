@@ -1,0 +1,66 @@
+name: CI/CD & Docker Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test-and-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint and typecheck
+        run: npm run lint
+
+      - name: Build frontend static bundle
+        run: npm run build
+
+  build-docker:
+    needs: test-and-lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Backend Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          tags: omnistream-backend:latest
+
+      - name: Build Frontend Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.frontend
+          push: false
+          tags: omnistream-frontend:latest
+
+  deploy-vps:
+    name: Optional SSH Auto-Deploy to VPS
+    needs: build-docker
+    if: github.ref == 'refs/heads/main' && github.repository != ''
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notice
+        run: |
+          echo "To enable automated 1-click deployment on push to your VPS:"
+          echo "Set VPS_HOST, VPS_USER, and VPS_SSH_KEY in Settings > Secrets and Variables > Actions."

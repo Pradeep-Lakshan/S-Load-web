@@ -7,7 +7,7 @@ interface CodeModalProps {
 }
 
 export const CodeModal: React.FC<CodeModalProps> = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<'docker' | 'fastapi' | 'curl' | 'cron' | 'health'>('docker');
+  const [activeTab, setActiveTab] = useState<'docker' | 'fastapi' | 'curl' | 'cron' | 'health' | 'github'>('github');
   const [copied, setCopied] = useState(false);
   const [healthData, setHealthData] = useState<any>(null);
 
@@ -23,6 +23,44 @@ export const CodeModal: React.FC<CodeModalProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   const files: Record<string, string> = {
+    github: `# ========================================================
+# 🚀 Step-by-Step GitHub Repository & Deployment Guide
+# ========================================================
+
+# 1. Initialize Git locally and create initial commit
+git init
+git add .
+git commit -m "feat: social media video downloader (yt-dlp, fastapi, nextjs, docker)"
+
+# 2. Set default branch to main
+git branch -M main
+
+# 3. Create a new repository on https://github.com/new
+# Then link this project to your GitHub repository:
+git remote add origin https://github.com/YOUR_USERNAME/omnistream.git
+
+# 4. Push your code to GitHub
+git push -u origin main
+
+# ========================================================
+# ⚙️ Configure GitHub Repository Secrets
+# Go to: Repository > Settings > Secrets and variables > Actions
+# Add the following Repository Secrets:
+# ========================================================
+# GEMINI_API_KEY       : Gemini API key for AI summaries & deep thinking
+# TURNSTILE_SECRET_KEY : (Optional) Cloudflare Turnstile secret
+# VPS_HOST             : (Optional) VPS IP for automated SSH deployment
+# VPS_USER             : (Optional) Server username (root / ubuntu)
+# VPS_SSH_KEY          : (Optional) Private SSH key for automated deployment
+
+# ========================================================
+# 🌐 Clone & Run on Any Server / VPS from your GitHub Repo
+# ========================================================
+git clone https://github.com/YOUR_USERNAME/omnistream.git /opt/omnistream
+cd /opt/omnistream
+cp .env.example .env
+docker-compose up -d --build`,
+
     docker: `# docker-compose.yml
 version: '3.8'
 
@@ -175,6 +213,7 @@ echo "Update applied successfully."`,
         {/* Tab selector */}
         <div className="flex border-b border-slate-800 bg-slate-950/40 px-5 pt-3 gap-2 overflow-x-auto">
           {[
+            { id: 'github', label: 'GitHub Deploy Guide' },
             { id: 'docker', label: 'docker-compose.yml' },
             { id: 'fastapi', label: 'FastAPI Backend' },
             { id: 'curl', label: 'cURL API Commands' },

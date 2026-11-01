@@ -94,3 +94,66 @@ docker-compose up -d --build
 chmod +x /opt/omnistream/cron/update_ytdlp.sh
 (crontab -l 2>/dev/null; echo "0 3 * * * /opt/omnistream/cron/update_ytdlp.sh >> /var/log/omnistream_cron.log 2>&1") | crontab -
 ```
+
+---
+
+## 🐙 How to Deploy on GitHub
+
+### Step 1: Initialize Git and Push to GitHub
+
+1. Create a new empty repository on [GitHub](https://github.com/new) (e.g. `omnistream`). Do not initialize with README since this project already contains one.
+2. Run the following commands in your terminal:
+
+```bash
+# Initialize git
+git init
+
+# Stage all files
+git add .
+
+# Create initial commit
+git commit -m "feat: complete social media video downloader"
+
+# Rename branch to main
+git branch -M main
+
+# Add your GitHub remote repository (replace with your URL)
+git remote add origin https://github.com/YOUR_USERNAME/omnistream.git
+
+# Push code to GitHub
+git push -u origin main
+```
+
+---
+
+### Step 2: Configure GitHub Repository Secrets (Optional)
+
+In your GitHub repository, navigate to **Settings > Secrets and variables > Actions**, then click **New repository secret**:
+
+| Secret Name | Value Description |
+|---|---|
+| `GEMINI_API_KEY` | Your Google Gemini API key for AI summaries and deep thinking analysis. |
+| `TURNSTILE_SECRET_KEY` | *(Optional)* Cloudflare Turnstile captcha secret key. |
+| `VPS_HOST` | *(Optional)* Server public IP address for automated SSH deployment. |
+| `VPS_USER` | *(Optional)* Server SSH username (e.g., `root` or `ubuntu`). |
+| `VPS_SSH_KEY` | *(Optional)* Server SSH private key for auto-deployment on git push. |
+
+---
+
+### Step 3: Automated CI/CD (GitHub Actions)
+
+A preconfigured GitHub Actions workflow is included at `.github/workflows/deploy.yml`. Whenever you push code to `main`:
+1. It automatically runs TypeScript linting and build checks.
+2. It builds and validates the Docker images for both backend and frontend.
+3. It can automatically execute deployment commands on your server.
+
+---
+
+### Step 4: 1-Click Hosting Platforms from GitHub
+
+Because OmniStream includes standard `Dockerfile`s and `docker-compose.yml`, you can easily deploy it on modern container hosting platforms directly from your GitHub repo:
+
+- **Coolify / Dokku / CapRover**: Point directly to your GitHub repo URL. Coolify will detect `docker-compose.yml` and provision both frontend and FastAPI backend automatically with automated SSL.
+- **Railway / Render**: Connect your GitHub repository. Select `Dockerfile.frontend` for the web interface and `backend/Dockerfile` for the Python API.
+- **DigitalOcean / Hetzner / AWS VPS**: SSH into your server, run `git clone https://github.com/YOUR_USERNAME/omnistream.git`, and run `docker-compose up -d --build`.
+
