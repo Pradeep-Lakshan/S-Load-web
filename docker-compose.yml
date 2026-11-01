@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # Python FastAPI Backend with yt-dlp and ffmpeg
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: omnistream-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - MAX_DURATION_SECONDS=7200
+      - MAX_FILESIZE_BYTES=524288000 # 500MB
+      - RATE_LIMIT_RULE=15/minute
+      - TURNSTILE_SECRET_KEY=${TURNSTILE_SECRET_KEY:-}
+    volumes:
+      - /tmp/omnistream_downloads:/tmp/omnistream_downloads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend Web Client
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: omnistream-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - BACKEND_API_URL=http://backend:8000
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+    depends_on:
+      - backend
+
+  # Daily cron worker to keep yt-dlp updated against platform changes
+  ytdlp-updater:
+    image: python:3.11-slim
+    container_name: omnistream-ytdlp-updater
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    entrypoint: >
+      /bin/sh -c '
+        while true; do
+          echo "[CRON] Sleeping 24h before scheduled yt-dlp update...";
+          sleep 86400;
+          echo "[CRON] Executing scheduled yt-dlp update inside backend container...";
+          docker exec omnistream-backend pip install --upgrade --no-cache-dir yt-dlp;
+          echo "[CRON] Reloading uvicorn processes...";
+          docker kill -s HUP omnistream-backend;
+        done
+      '
+
+networks:
+  default:
+    name: omnistream-network

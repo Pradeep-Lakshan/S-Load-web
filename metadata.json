@@ -1,0 +1,6 @@
+{
+  "name": "OmniStream - Social Media Video Downloader",
+  "description": "Fast and secure social media video downloader supporting YouTube, TikTok, Instagram, X/Twitter, Facebook, Reddit, and Vimeo with multi-quality formats and MP3 audio extraction.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
